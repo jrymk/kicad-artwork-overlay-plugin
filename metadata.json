@@ -1,0 +1,26 @@
+{
+  "$schema": "https://go.kicad.org/pcm/schemas/v2",
+  "name": "Big Silkscreen Artwork Overlay Tool",
+  "description": "Compose SVG silkscreen artwork on a PCB with clearance rules, inversion layers and minimum-feature cleanup.",
+  "description_full": "Compose SVG artwork directly over a PCB and generate front or back silkscreen. Shared color-based rules provide clearances for exposed copper, existing silkscreen, courtyards, solder mask and custom layers. Includes artwork inversion layers, minimum-feature cleanup, reusable profiles and a separate Update Big Silkscreen Artwork Overlay Tool action.\n\nWindows x64, KiCad 10 with Python 3.11. Dependencies are bundled; no separate installer or first-run downloads are needed. Created with AI assistance and not independently audited.",
+  "identifier": "com.jerrymk.artwork-overlay-tool",
+  "type": "plugin",
+  "author": {
+    "name": "jerrymk",
+    "contact": {}
+  },
+  "license": "GPL-3.0-or-later",
+  "resources": {},
+  "versions": [
+    {
+      "version": "1.0.0",
+      "status": "stable",
+      "kicad_version": "10.0",
+      "kicad_version_max": "10.99",
+      "runtime": "swig",
+      "platforms": [
+        "windows"
+      ]
+    }
+  ]
+}
