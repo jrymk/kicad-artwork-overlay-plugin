@@ -15,8 +15,8 @@ popup window. No preliminary artwork import or Transform It step is needed.
    while preserving aspect ratio. Rotation, width and centre coordinates also
    have numeric controls. Right-drag pans; the wheel zooms around the pointer.
 3. In **Rules**, click an object to populate a condition, edit its
-   wildcard if needed, choose a color button, and **Add** the rule. New overlays
-   have no rules or automatic exclusion colors. Each color has
+   wildcard if needed, choose a color button, and **Add** the rule. New projects
+   start with the built-in basic rules described below; saved projects keep their own settings. Each color has
    layer toggles, a clearance for each layer, and one flow-inside setting.
    Optionally clip to the board outline and internal cutouts with edge clearance.
 4. White shows final generated ink and existing silkscreen; removed artwork is hidden. Colors show
@@ -42,7 +42,7 @@ metadata, not independent per-artwork rules. Footprint metadata is authoritative
 so a stale or missing `SilkOverlayProject` board property cannot erase rules. Existing version-1 artwork is read
 without modification and supplies the initial shared settings on its next Apply.
 Missing/inconsistent saved rules block quick update and Apply until a profile
-is loaded or Reset is used. Quick update refuses an empty rule set unless an inversion layer is configured.
+is loaded or Load basic defaults is used. Quick update refuses an empty rule set unless an inversion layer is configured.
 No migration picker is used. Move/rotate/flip operations performed in KiCad are
 incorporated when reopening or updating.
 
@@ -91,7 +91,7 @@ removes its generated footprint. Move/edit the source layer shapes rather
 than the generated inversion footprint, whose position is rebuilt on update.
 
 The two selections are shared project settings, saved in the PCB metadata and
-profiles. Older projects/profiles have inversion off; Reset also turns it off.
+profiles. Older projects/profiles have inversion off; Load basic defaults also turns it off.
 During dragging, inversion is calculated by the background worker after a
 short idle delay; the preview retains the last result with an updating message.
 Apply always reads the current board layers before generating the final ink.
@@ -101,7 +101,7 @@ Apply always reads the current board layers before generating the final ink.
 On **Rules**, check **Minimum feature width (mm)** to remove thin remaining ink
 after all clearance and board-edge cutouts. Uncheck it to skip cleanup while keeping
 the entered width. A width of 0 also disables cleanup. New projects start with cleanup
-off; older saved positive widths remain enabled. The value and checkbox state are
+enabled at 0.15 mm; existing projects keep their saved value and enable state. The value and checkbox state are
 shared by all SVGs and saved in footprint metadata and rule profiles.
 
 Check **Edge clearance (mm)** to clip artwork to the board outline and internal
@@ -155,9 +155,10 @@ color. Both selectors show the color's **Label**, falling back to its color name
 A checkmark and bold text mark the selected button. The table uses saturated, medium-dark colors
 and keeps background shading on the editing row when focus moves away.
 Click empty table space to deselect; Update, Remove and reorder buttons then disable.
-All footprints and graphics remain unmatched until an explicit rule or retained
-manual assignment matches them. Older saved rules/profiles remain available;
-the former implicit fallback colors are removed.
+Objects use the matching rules shown in the editor, or retained manual assignments.
+New projects start with visible basic rules for footprints and graphics. Existing
+saved rules, including an intentionally empty rule list, remain unchanged.
+There are no hidden fallback color assignments.
 
 Each color has these independent exclusion sources:
 
@@ -183,11 +184,10 @@ Old custom-layer settings become slot 1 with Both selected; slot 2 starts disabl
 A missing/disabled custom layer is reported when needed for the active artwork side,
 and Apply remains disabled until corrected.
 
-Color templates initially enable Cu ∩ Mask, Silkscreen and Mask. Red also enables
-Courtyard. Custom starts disabled. Silk clearance defaults to 0.20 mm; the other
-sources default to 0.30 mm for red/yellow and 0.20 mm for the remaining colors.
-Flow-inside defaults off for red/yellow/blue/green/orange/purple, on for cyan/magenta. These
-settings do nothing until you explicitly assign a rule to that color.
+The basic preset enables Silkscreen for Blue and Cu ∩ Mask plus Silkscreen for
+Red. Other sources are disabled, and flow-inside is off for all colors. Enable
+additional sources as needed when assigning another color. Existing projects
+and profiles retain their own color settings.
 
 For example, add a passive-footprint rule assigned to yellow, then adjust exposed
 copper/mask clearance until the expanded pads join across the desired gaps
@@ -221,6 +221,13 @@ rule edits; Apply saves them with the overlay without recoloring PCB objects.
 
 ## Matching rules and profiles
 
+Settings are stored in the **PCB file (.kicad_pcb)** when you click Apply: each
+generated footprint carries the shared configuration in its hidden `SilkOverlay`
+field, and the board also stores a `SilkOverlayProject` property. Save the PCB in
+KiCad to persist these changes to disk. The footprint copies are authoritative;
+they are not independent rulesets. A saved profile is a separate JSON file for
+reuse on other boards, not an automatically selected personal default.
+
 The **last matching rule wins**. Footprint conditions can use footprint name,
 reference, value, **Selected footprints**, or **No conditions** (all footprints).
 Graphic conditions are **All graphics**, **Text**, or **Selected graphics**.
@@ -246,7 +253,7 @@ manual assignments from older overlays take precedence over rules; **Clear manua
 overrides** removes those assignments and appears only when they exist. It does
 not remove matching rules. UUID selection rules are board-specific.
 
-**Save profile…**, **Load profile…**, and **Reset to defaults** are at the top
+**Save profile…**, **Load profile…**, and **Load basic defaults…** are at the top
 of **Rules**. Minimum feature width, edge clearance and clipping are on
 that page too. Save/load use portable JSON containing ordered rules, all eight color
 settings (labels, layer toggles/clearances, both custom slots and their sides,
@@ -256,7 +263,9 @@ manual overrides so the loaded rules take effect. Older profiles without the
 shared width/edge fields leave those values unchanged. UUID rules remain
 board-specific. Save your own default profile and load it as a starting point.
 
-**Reset to defaults** explicitly replaces the rules with:
+**Load basic defaults…** loads the built-in starter preset, not a personal
+profile. This same preset loads automatically for a board with no saved overlay
+settings. It contains:
 
 - Minimum feature width: **0.15 mm**.
 - Graphic, no condition → **Blue**, silkscreen enabled at **0.30 mm**.
@@ -265,8 +274,11 @@ board-specific. Save your own default profile and load it as a starting point.
 
 Other exclusion layers are disabled, flow-inside is off, and manual overrides
 are cleared. Edge clearance and clipping remain unchanged. Nothing is applied
-to the PCB until Apply. A new board still starts without rules until you load a
-profile, use Reset, or add your own. Saving a profile is independent of Apply;
+to the PCB until Apply. Both **Load profile…** and **Load basic defaults…** ask
+for confirmation before replacing current settings, with Cancel selected by
+default. Invalid profiles are rejected before confirmation or any settings change.
+Existing saved configurations are never replaced automatically, even if their
+rule list is empty. Saving a profile is independent of Apply;
 Cancel does not delete a profile you explicitly saved.
 
 ## Preview updates and performance

@@ -66,7 +66,9 @@ def recover_shared(properties, legacy):
         return shared_settings(value)
     if legacy and any(info.get("version") in (2, 3) for _, info in legacy):
         raise MissingSharedSettings("Saved SVG placements were found, but their shared rules are missing. Load a saved profile in the composer; artwork has not been changed.")
-    return shared_settings(legacy[0][1] if legacy else {})
+    # Only a board with no saved configuration gets the basic starter preset.
+    # Saved empty rules and older artwork are intentional state, not defaults.
+    return shared_settings(legacy[0][1]) if legacy else reset_settings()
 
 
 def encode_shared(settings):
@@ -74,7 +76,7 @@ def encode_shared(settings):
 
 
 def reset_settings():
-    """User's explicit Reset preset; never silently applied to new projects."""
+    """Built-in basic preset for new projects and explicit preset loading."""
     result = shared_settings({"minimum_width": .15})
     for rule in result["colour_rules"].values():
         rule["allow_inside"] = False

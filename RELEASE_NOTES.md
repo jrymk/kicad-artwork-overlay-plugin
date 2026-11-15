@@ -2,6 +2,19 @@
 
 By **jerrymk**. Compose SVG artwork as PCB silkscreen directly in KiCad.
 
+## Basic rules and profiles
+
+- Boards without saved overlay settings now start with the basic preset:
+  Blue graphics with 0.30 mm silk clearance, Red footprints with 0.15 mm
+  exposed-copper and silk clearance, and 0.15 mm minimum-feature cleanup.
+- Existing saved settings, including empty rule lists, remain unchanged.
+- Rename Reset to **Load basic defaults…** to distinguish the built-in preset
+  from a personal profile.
+- Ask for confirmation before loading a profile or basic defaults. Cancel is
+  selected initially, and malformed profiles are rejected before replacing settings.
+
+## Features
+
 - Place, resize, rotate and mirror multiple SVGs on the front or back.
 - Use eight named color groups and ordered rules to control exclusions for
   exposed copper, existing silkscreen, courtyards, mask and custom board layers.

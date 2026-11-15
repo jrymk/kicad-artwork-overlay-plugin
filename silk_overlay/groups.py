@@ -19,7 +19,7 @@ PALETTE = {
     "cyan": ("Cyan", "#68d5dc"), "magenta": ("Magenta", "#da87db"),
     "orange": ("Orange", "#f3a34c"), "purple": ("Purple", "#a793ec"),
 }
-LAYERS = {"exposed": "Cu ∩ Mask", "silk": "Silkscreen", "courtyard": "Courtyard",
+LAYERS = {"exposed": "Cu ∩ Mask (exposed copper)", "silk": "Silkscreen", "courtyard": "Courtyard",
           "mask": "Mask", "custom": "Custom layer 1", "custom2": "Custom layer 2"}
 CUSTOM_SLOTS = ("custom", "custom2")
 SIDES = ("Both", "Front", "Back")

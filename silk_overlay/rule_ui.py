@@ -32,7 +32,7 @@ class RulePanel(wx.Panel):
         form = wx.BoxSizer(wx.VERTICAL)
         profile_row = wx.WrapSizer(wx.HORIZONTAL)
         for label, handler in (("Save profile…", self.save_profile), ("Load profile…", self.load_profile),
-                               ("Reset to defaults", self.reset)):
+                               ("Load basic defaults…", self.reset)):
             button = wx.Button(self, label=label, style=wx.BU_EXACTFIT)
             button.Bind(wx.EVT_BUTTON, handler)
             profile_row.Add(button, 0, wx.RIGHT | wx.BOTTOM, 4)
@@ -394,6 +394,14 @@ class RulePanel(wx.Panel):
                 text = Path(dialog.GetPath()).read_text(encoding="utf-8-sig")
                 rules, matching = parse_profile(text)
                 space = validate_profile_space(json.loads(text))
+                profile_name = Path(dialog.GetPath()).name
+            if not self.confirm_replacement(
+                    "Load profile?", "Load profile",
+                    f"Load {profile_name}?\n\n"
+                    "This replaces the current rules, color settings and inversion layers, "
+                    "clears manual overrides, and loads any edge-clearance and cleanup settings in the profile. "
+                    "SVG placements stay unchanged."):
+                return
             self.composer.colour_rules, self.composer.matching_rules = rules, matching
             self.composer.configuration_error = None
             self.composer.assignments.clear()
@@ -413,7 +421,20 @@ class RulePanel(wx.Panel):
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             self.set_status(str(error))
 
+    def confirm_replacement(self, title, action, message):
+        message += "\n\nSave a profile first if you want to keep the current settings. The PCB changes only when you click Apply."
+        with wx.MessageDialog(self, message, title, wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING) as dialog:
+            dialog.SetYesNoLabels(action, "Cancel")
+            return dialog.ShowModal() == wx.ID_YES
+
     def reset(self, event):
+        if not self.confirm_replacement(
+                "Load basic defaults?", "Load basic defaults",
+                "This replaces the current rules and color settings with the built-in basic preset, "
+                "clears manual overrides, turns inversion off, and enables minimum feature width at 0.15 mm.\n\n"
+                "These are the tool's basic defaults, not a saved personal profile. "
+                "Edge clearance and SVG placements stay unchanged."):
+            return
         settings = reset_settings()
         self.composer.colour_rules = settings["colour_rules"]
         self.composer.matching_rules = settings["matching_rules"]

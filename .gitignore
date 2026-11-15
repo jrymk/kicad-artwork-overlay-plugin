@@ -3,3 +3,7 @@ __pycache__/
 .venv/
 vendor/
 dist/
+
+# Local release archives are uploaded to GitHub Releases.
+*.zip
+*.zip.sha256
