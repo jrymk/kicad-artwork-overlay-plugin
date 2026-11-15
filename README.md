@@ -7,6 +7,26 @@ Created with AI assistance and not independently audited.
 KiCad **10** action plugin for composing a large SVG directly over a PCB in a
 popup window. No preliminary artwork import or Transform It step is needed.
 
+## Features and Showcase
+
+<img width="2236" height="1227" alt="image" src="https://github.com/user-attachments/assets/b4036b77-6f20-441d-8469-dc78c0a788e8" />
+<img width="1857" height="1217" alt="image" src="https://github.com/user-attachments/assets/a38826e5-cced-4d42-9066-e39644bbf138" />
+<img width="1857" height="1425" alt="image" src="https://github.com/user-attachments/assets/ee60d694-a4d3-4b17-af8e-5151efc5987e" />
+
+
+### Video
+<video src="https://s3.jerrymk.com/pub/Screen%20Recording%202026-11-15%20153022.mp4" controls width="720"></video>
+[URL](https://s3.jerrymk.com/pub/Screen%20Recording%202026-11-15%20153022.mp4)
+
+This video shows you:
+- how to get started in adding an artwork to a PCB with default settings
+- adjust clearances
+- add custom rules to certain graphic objects for a larger clearance
+- add custom rules to certain footprint types for allowing artwork to go inside the component
+- use a custom layer for extra exclusion objects like User.1
+- use the update button to regenerate the overlay artworks without opening the tool window
+- move the generated artwork footprint around instead of going back to the tool window to adjust the position
+
 ## Use
 
 1. Open a PCB in KiCad. Run **Tools → External Plugins → Big Silkscreen Artwork Overlay Tool**
