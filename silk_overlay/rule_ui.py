@@ -158,7 +158,10 @@ class RulePanel(wx.Panel):
         self.composer.inversion_changed()
 
     def set_status(self, text):
-        text = self.composer.configuration_error or text
+        error = self.composer.configuration_error or self.composer.rules_error
+        if error:
+            text = "Preview not updated: " + error
+        self.status.SetForegroundColour("#b32d2d" if error else wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT))
         self.status_text = text
         self.status.SetLabel(text)
         self.status.Wrap(max(self.FromDIP(180), self.GetClientSize().width))

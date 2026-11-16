@@ -22,6 +22,7 @@ PALETTE = {
 LAYERS = {"exposed": "Cu ∩ Mask (exposed copper)", "silk": "Silkscreen", "courtyard": "Courtyard",
           "mask": "Mask", "custom": "Custom layer 1", "custom2": "Custom layer 2"}
 CUSTOM_SLOTS = ("custom", "custom2")
+COURTYARD_INSET_FIELD = "ArtworkCourtyardInset"
 SIDES = ("Both", "Front", "Back")
 TABLE_COLORS = {"red": "#cf3838", "blue": "#3268d8", "green": "#21864a",
                 "yellow": "#a37a00", "cyan": "#008899", "magenta": "#b137b9",
@@ -51,6 +52,7 @@ class BoardObject:
     text: str = ""
     openings: object = None
     layers: object = None
+    courtyard_inset: str = ""
 
     @cached_property
     def hit_geometry(self):
@@ -64,12 +66,18 @@ def default_rules(silk_gap=.2, mask_gap=.2):
     return {key: {"label": "", "allow_inside": key in ("cyan", "magenta"), "layers": {
         layer: {"enabled": layer not in ("courtyard", *CUSTOM_SLOTS) or (layer == "courtyard" and key == "red"),
                 "clearance": silk_gap if layer == "silk" else .3 if key in ("red", "yellow") else mask_gap,
+                **({"solid": True, "inset": 0.0} if layer == "courtyard" else {}),
                 **({"name": "", "side": "Both"} if layer in CUSTOM_SLOTS else {})} for layer in LAYERS}} for key in PALETTE}
 
 
 def rules_for_settings(settings):
     """Migrate earlier single-clearance/pad-mode settings to explicit layers."""
     rules = default_rules(settings.get("silk_gap", .2), settings.get("mask_gap", .2))
+    # Saved configurations predate solid courtyard exclusion. Preserve their
+    # stroke/fill behavior until the user explicitly enables Solid courtyard.
+    if "colour_rules" in settings or settings.get("version") == 1:
+        for rule in rules.values():
+            rule["layers"]["courtyard"]["solid"] = False
     if "colour_rules" not in settings and settings.get("version") == 1:
         rules["red"]["allow_inside"] = True
         for layer in ("exposed", "courtyard"):
@@ -175,10 +183,15 @@ def validate_rules(rules, matching_rules):
                     raise ValueError(f"{field}: enter a number in mm, or disable this layer.") from None
                 if not math.isfinite(gap) or gap < 0:
                     raise ValueError(f"{field} must be finite and non-negative.")
+            if layer == "courtyard":
+                if not isinstance(layer_rule.get("solid", False), bool):
+                    raise ValueError("Solid courtyard must be true or false.")
+                if layer_rule["enabled"] and layer_rule.get("solid", False):
+                    courtyard_inset_value(layer_rule.get("inset", 0), "Courtyard inset")
             if layer in CUSTOM_SLOTS and layer_rule.get("side", "Both") not in SIDES:
                 raise ValueError("Custom layer side must be Front, Back or Both.")
             if layer in CUSTOM_SLOTS and layer_rule["enabled"] and not layer_rule.get("name"):
-                raise ValueError(f"Choose a custom board layer for {PALETTE[key][0]}.")
+                raise ValueError(f"{color_label(rules, key)} / {LAYERS[layer]}: choose a board layer or disable this source.")
         if not isinstance(rule["allow_inside"], bool):
             raise ValueError("Invalid colour group settings.")
     for rule in matching_rules:
@@ -252,7 +265,31 @@ def distribute_exposed(items, exposed):
     return exposed.difference(unary_union(represented))
 
 
+def courtyard_inset_value(value, label):
+    """Accept millimeters, optionally with an explicit mm suffix."""
+    text = str(value).strip().lower()
+    if text.endswith("mm"):
+        text = text[:-2].strip()
+    try:
+        result = float(text)
+    except (ValueError, TypeError):
+        raise ValueError(f"{label}: enter an inset in mm (for example 0.25).") from None
+    if not math.isfinite(result) or result < 0:
+        raise ValueError(f"{label} must be finite and non-negative.")
+    return result
+
+
 def layer_geometry(item, layer, layer_rule):
+    if layer == "courtyard" and layer_rule.get("solid", False):
+        if item.kind != "footprint":
+            return GeometryCollection()
+        override = item.courtyard_inset.strip()
+        value = override if override else layer_rule.get("inset", 0)
+        label = f"{item.reference or item.label} / {COURTYARD_INSET_FIELD}" if override else "Courtyard inset"
+        inset = courtyard_inset_value(value, label)
+        # Shrink the actual region, not its thin outline. If it disappears,
+        # only the other enabled exclusion layers remain for this footprint.
+        return item.region.buffer(-inset, quad_segs=32) if inset else item.region
     key = "custom:" + layer_rule.get("name", "") if layer in CUSTOM_SLOTS else layer
     if item.layers is not None:
         return item.layers.get(key, GeometryCollection())

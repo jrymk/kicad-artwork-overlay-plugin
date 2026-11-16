@@ -7,7 +7,7 @@ import pcbnew as pcb
 from shapely.geometry import Polygon
 
 from .geometry import polygons, union_polygonal, outline_band, TOLERANCE
-from .groups import BoardObject, fill_enclosed, merge_footprint_layers, distribute_exposed
+from .groups import BoardObject, fill_enclosed, merge_footprint_layers, distribute_exposed, COURTYARD_INSET_FIELD
 from .project import PROPERTY, encode_shared, placement_settings
 from .recovery import backup_path, prune_backups
 
@@ -226,9 +226,11 @@ def read_objects(board, side, exclude=None, custom_names=()):
                 if zone.IsOnLayer(layer) and not zone.GetIsRuleArea():
                     zone.TransformSolidAreasShapesToPolygon(layer, poly)
             layers["custom:"+name] = from_poly(poly)
+        inset_override = fp.GetField(COURTYARD_INSET_FIELD).GetText() if fp.HasField(COURTYARD_INSET_FIELD) else ""
         records.append(BoardObject(parent, fp.GetReference()+" · "+fp.GetValue(), "footprint",
                                    pad_geometry, court, region_source=source, reference=fp.GetReference(),
-                                   footprint=fp.GetFPIDAsString(), value=fp.GetValue(), openings=mask_geometry, layers=layers))
+                                   footprint=fp.GetFPIDAsString(), value=fp.GetValue(), openings=mask_geometry,
+                                   layers=layers, courtyard_inset=inset_override))
         if not fp.GetPrivateLayers().Contains(silk_layer):
             for item in list(fp.GetFields()) + list(fp.GraphicalItems()):
                 add_silk(item, parent, fp.GetReference()+" / ")

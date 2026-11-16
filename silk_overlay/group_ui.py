@@ -1,7 +1,7 @@
 """Colour tabs and canvas selection; no board-object table."""
 import wx
 from shapely.geometry import box
-from .groups import PALETTE, LAYERS, CUSTOM_SLOTS, SIDES, ObjectIndex
+from .groups import PALETTE, LAYERS, CUSTOM_SLOTS, SIDES, ObjectIndex, COURTYARD_INSET_FIELD
 from .color_ui import refresh_buttons
 
 
@@ -47,6 +47,25 @@ class GroupPanel(wx.Panel):
             row.Add(control, 0, wx.LEFT, 5)
             row.Add(wx.StaticText(self, label="mm"), 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
             form.Add(row, 0, wx.EXPAND | wx.BOTTOM, 4)
+            if field == "courtyard":
+                control.SetToolTip("Outward clearance after the courtyard inset is applied.")
+                row = wx.BoxSizer(wx.HORIZONTAL)
+                self.courtyard_solid = wx.CheckBox(self, label="Solid courtyard")
+                self.courtyard_solid.SetToolTip(
+                    "Exclude the courtyard's enclosed area, even when Allow artwork to flow inside object is on. "
+                    "Older profiles retain outline behavior until this is enabled.")
+                self.courtyard_solid.Bind(wx.EVT_CHECKBOX, self.rule_changed)
+                row.Add(self.courtyard_solid, 1, wx.ALIGN_CENTER_VERTICAL)
+                row.Add(wx.StaticText(self, label="Inset"), 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
+                self.courtyard_inset = wx.TextCtrl(self, size=self.FromDIP((75, -1)))
+                self.courtyard_inset.SetToolTip(
+                    "Shrink the solid courtyard inward by this distance before applying its clearance. "
+                    f"Footprint property {COURTYARD_INSET_FIELD} overrides only this inset (mm); blank inherits it. "
+                    "If the region shrinks away, the other exclusion layers still apply.")
+                self.courtyard_inset.Bind(wx.EVT_TEXT, self.rule_changed)
+                row.Add(self.courtyard_inset, 0, wx.LEFT, 5)
+                row.Add(wx.StaticText(self, label="mm"), 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
+                form.Add(row, 0, wx.EXPAND | wx.LEFT | wx.BOTTOM, 8)
             if field in CUSTOM_SLOTS:
                 row = wx.BoxSizer(wx.HORIZONTAL)
                 layer = wx.Choice(self, choices=["Choose a board layer…"] + composer.custom_choices)
@@ -63,6 +82,7 @@ class GroupPanel(wx.Panel):
                 row.Add(side, 0, wx.EXPAND)
                 form.Add(row, 0, wx.EXPAND | wx.BOTTOM, 8)
         self.allow = wx.CheckBox(self, label="Allow artwork to flow inside object")
+        self.allow.SetToolTip("Allow unblocked interior spaces. Enabled solid courtyard regions remain excluded.")
         self.allow.Bind(wx.EVT_CHECKBOX, self.rule_changed)
         form.Add(self.allow, 0, wx.BOTTOM, 5)
         self.description = wx.StaticText(self, label="")
@@ -87,6 +107,11 @@ class GroupPanel(wx.Panel):
             control.ChangeValue(str(rule["layers"][layer]["clearance"]))
             control.Enable(enabled.GetValue())
         self.allow.SetValue(rule["allow_inside"])
+        courtyard = rule["layers"]["courtyard"]
+        self.courtyard_solid.SetValue(courtyard.get("solid", False))
+        self.courtyard_solid.Enable(courtyard["enabled"])
+        self.courtyard_inset.ChangeValue(str(courtyard.get("inset", 0)))
+        self.courtyard_inset.Enable(courtyard["enabled"] and self.courtyard_solid.GetValue())
         for slot, (layer, side) in self.custom_controls.items():
             settings = rule["layers"][slot]
             name = settings.get("name", "")
@@ -123,6 +148,8 @@ class GroupPanel(wx.Panel):
         text = items[0].label if len(items) == 1 else f"{len(items)} objects selected"
         if not items:
             text = ""
+        elif len(items) == 1 and items[0].courtyard_inset.strip():
+            text += f" · Courtyard inset override: {items[0].courtyard_inset}"
         self.description_text = text
         self.description.SetLabel(text)
         self.description.Wrap(max(self.FromDIP(180), self.GetClientSize().width))
@@ -160,6 +187,10 @@ class GroupPanel(wx.Panel):
         for layer, (enabled, control) in self.layer_controls.items():
             control.Enable(enabled.GetValue())
             layers[layer] = {"enabled": enabled.GetValue(), "clearance": control.GetValue()}
+        courtyard = layers["courtyard"]
+        courtyard.update(solid=self.courtyard_solid.GetValue(), inset=self.courtyard_inset.GetValue())
+        self.courtyard_solid.Enable(courtyard["enabled"])
+        self.courtyard_inset.Enable(courtyard["enabled"] and courtyard["solid"])
         for slot, (layer, side) in self.custom_controls.items():
             layers[slot]["name"] = layer.GetStringSelection() if layer.GetSelection() > 0 else ""
             layers[slot]["side"] = side.GetStringSelection()

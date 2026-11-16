@@ -1,8 +1,19 @@
-# Big Silkscreen Artwork Overlay Tool 1.0.0
+# Big Silkscreen Artwork Overlay Tool 1.0.1
 
 By **jerrymk**. Compose SVG artwork as PCB silkscreen directly in KiCad.
 
-## Basic rules and profiles
+## New in 1.0.1: courtyard insets
+
+- Solid courtyard exclusion can be inset before its outward clearance is applied,
+  letting pad clearances shape the outside while the courtyard blocks the interior.
+- The footprint field `ArtworkCourtyardInset` overrides only that inset; blank
+  inherits the color setting. Invalid active values stop processing with a message.
+- Solid courtyards remain excluded with flow-inside enabled. Existing settings and
+  profiles retain legacy outline behavior until Solid courtyard is enabled.
+- Preview errors remain visible when selecting/deselecting objects; incomplete
+  custom-layer settings identify the color and slot and explain how to proceed.
+
+## Included from 1.0.0: basic rules and profiles
 
 - Boards without saved overlay settings now start with the basic preset:
   Blue graphics with 0.30 mm silk clearance, Red footprints with 0.15 mm
@@ -30,7 +41,7 @@ By **jerrymk**. Compose SVG artwork as PCB silkscreen directly in KiCad.
 **Windows x64, KiCad 10 with its Python 3.11 runtime.**
 
 In KiCad's Plugin and Content Manager, choose **Install from File** and select
-`BigSilkscreenArtworkOverlayTool-1.0.0-windows-kicad10-pcm.zip`. Dependencies are bundled.
+`BigSilkscreenArtworkOverlayTool-1.0.1-windows-kicad10-pcm.zip`. Dependencies are bundled.
 Do not extract it, and do not install the separate source ZIP through PCM.
 
 The package ID is now `com.jerrymk.artwork-overlay-tool`. Users of development
