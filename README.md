@@ -11,14 +11,17 @@ KiCad 10 action plugin for composing a large SVG artwork directly over a PCB.
 <img width="2460" height="1542" alt="image" src="https://github.com/user-attachments/assets/3e35c4b2-3d9e-4788-a95c-341207b24342" />
 Board example: Raspberry Pi CM5 IO Board
 
+[Video URL](http://s3.jerrymk.com/pub/Screen%20Recording%202026-11-16%20194355.mp4)
+
+---
+
 <img width="2236" height="1227" alt="image" src="https://github.com/user-attachments/assets/b4036b77-6f20-441d-8469-dc78c0a788e8" />
 <img width="1857" height="1217" alt="image" src="https://github.com/user-attachments/assets/a38826e5-cced-4d42-9066-e39644bbf138" />
 <img width="1857" height="1425" alt="image" src="https://github.com/user-attachments/assets/ee60d694-a4d3-4b17-af8e-5151efc5987e" />
 
 
 ### Video
-<video src="https://s3.jerrymk.com/pub/Screen%20Recording%202026-11-15%20153022.mp4" controls width="720"></video>
-[URL](https://s3.jerrymk.com/pub/Screen%20Recording%202026-11-15%20153022.mp4)
+[Another video URL](https://s3.jerrymk.com/pub/Screen%20Recording%202026-11-15%20153022.mp4)
 
 This video shows you:
 - how to get started in adding an artwork to a PCB with default settings
